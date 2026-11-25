@@ -8,14 +8,13 @@ using InteractiveUtils
 begin
 	using UnfoldSim
 	using MixedModels
-	using MixedModelsSmallSample# for the Kenward-Roger Stats (do I need that? idk)
 	import StatsModels# for Contrastcoding
 	using DataFrames# like pandas?
 	using Distributions: Normal, Chisq, TDist, ccdf # Distributions for the p-values
 	using StableRNGs# reproducible random seeds
 	using HypothesisTests
 	using Statistics, Logging
-	using ProgressLogging# Progress Bar (where?)
+	using ProgressLogging# Progress Bar
 	using CSV
 	using CairoMakie# plots
 	CairoMakie.activate!(type = "png", px_per_unit = 2)
@@ -72,19 +71,9 @@ begin
 	ratio_item_grid = [0.0, 0.05, 0.1, 0.15, 0.25, 0.35, 0.5, 0.75, 1.0] # sd_item intercept & slope
 end
 
-# ╔═╡ 00e67758-89fb-42ec-ad3d-8286203555be
-begin
-	# Side Grid: item ratio is constant, subject-rations change
-	# TBD: What do I need that for?
-	side_ratio_item = 0.25
-	side_grid_subject_intercept = [0.25, 0.5, 1.0]
-	side_grid_subject_slope = [0.0, 0.25, 0.5]
-	side_grid_item_intercept_B = [0.0, 0.5, 1.0]
-end
-
 # ╔═╡ 11738b74-ad80-4973-9b94-eeb25f47bbeb
 begin
-	master_seed = 20261111 # origin seed for all datasets #TBD: Why 20261111?
+	master_seed = 20261111 # origin seed for all datasets
 	recompute = false # true = recompute everything even if derivative files already exist
 end
 
@@ -392,7 +381,6 @@ function analyse_lmm(model, data, contrasts)
 	likelihood_ratio = max(2 * (loglikelihood(fit_full) - loglikelihood(fit_null)), 0.0)
 	# Compute the Likelihood Ratio Test p-value using a Chi-square distribution with 1 degree of freedom
 	p_lrt = ccdf(Chisq(1), likelihood_ratio)
-	#TBD: Bene meinte ich soll vlt auch einfach t-test nehmen?
 	return (; model = model.name, estimate, se, p_lrt, p_t = NaN,
 		singular = issingular(fit_full), # how often variance estimate = 0 
 		sd_item_intercept_pred = estimated_sd(fit_full, :item, 1),
@@ -582,7 +570,7 @@ function run_condition(condition, n_rep)
 	rows = NamedTuple[]
 	for rep in 1:n_rep
 		# simulate a new dataset
-		data = simulate_dataset(master_seed+2*rep, master_seed+2*rep+1, d, component; sd_residual)
+		data = simulate_dataset(master_seed+3*rep, master_seed+3*rep+2, d, component; sd_residual)
 		# analyse the dataset with all models M1-4(+5) and T-Test and add it to a BIIG dataframe
 		for row in analyse_dataset(data, condition.design)
 			push!(rows, (; condition_id = condition.condition_id, 
@@ -634,7 +622,6 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 HypothesisTests = "09f84164-cd44-5f33-b23f-e6b0d136a0d5"
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 MixedModels = "ff71e718-51f3-5ec2-a782-8ffcbfa3c316"
-MixedModelsSmallSample = "fb531da0-582c-4a62-80cc-836e12ba9c31"
 ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 StableRNGs = "860ef19b-820b-49d6-a774-d7a799459cd3"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
@@ -647,7 +634,6 @@ DataFrames = "~1.8.3"
 Distributions = "~0.25.134"
 HypothesisTests = "~0.12.2"
 MixedModels = "~4.38.1"
-MixedModelsSmallSample = "~0.1.0"
 ProgressLogging = "~0.1.6"
 StableRNGs = "~1.1.0"
 StatsModels = "~0.7.10"
@@ -660,7 +646,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.5"
 manifest_format = "2.0"
-project_hash = "fa29235a4ebd103bf92db1e561ade90d8bc72329"
+project_hash = "4d0e383ebcfc78d8ccf67331487e891372537631"
 
 [[deps.ADTypes]]
 deps = ["PrecompileTools"]
@@ -2062,12 +2048,6 @@ git-tree-sha1 = "9bbcfdc15ed571358e9dafe160dcfd44f0cac353"
 uuid = "d5ae56c5-23ca-4a1f-b505-9fc4796fc1fe"
 version = "0.2.13"
 
-[[deps.MixedModelsSmallSample]]
-deps = ["Distributions", "LinearAlgebra", "Markdown", "MixedModels", "StatsAPI", "StatsBase"]
-git-tree-sha1 = "5cd526c2670f629eb1a100894e26727945b1d463"
-uuid = "fb531da0-582c-4a62-80cc-836e12ba9c31"
-version = "0.1.0"
-
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 version = "1.11.0"
@@ -3220,7 +3200,6 @@ version = "4.1.0+0"
 # ╟─caad47df-24e5-442d-8a16-ee995c460c2c
 # ╠═995f3866-594e-48be-a9d2-24a80e6e5778
 # ╠═6f14443d-2f7f-42e5-920b-ffee8be04f80
-# ╠═00e67758-89fb-42ec-ad3d-8286203555be
 # ╠═11738b74-ad80-4973-9b94-eeb25f47bbeb
 # ╟─58a1e835-2085-45ce-afcc-5b8e01bd0ccf
 # ╠═ea027bcd-6245-41f0-8df2-c255256e8fc2
